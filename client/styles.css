@@ -3,3 +3,42 @@
 /* Note: an asteroid image is included in this repo.
 Feel free to use it if you like. */
 
+body{
+  margin: 0;
+  font-family: helvetica;
+  position: relative;
+  background-image: url('WashDC.jpg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.mouse{
+  background-image: url('Barack.jpg');
+  background-size: 100% 100%;
+  position: absolute;
+}
+
+.asteroid{
+  background-image: url('John.jpg');
+  background-size: 100% 100%;
+  position: absolute;
+  border-radius: 30px;
+}
+
+.scoreboard{
+  width: 250px;
+  height: 100px;
+  background-color: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.scoreboard div{
+  line-height: 33px;
+  font-size: 25px;
+  float: right;
+}
+

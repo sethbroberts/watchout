@@ -1,275 +1,131 @@
 // start slingin' some d3 here.
 
-//make new coordinates
-var makeCoord = function (n) {
-  //input: number of random coordinates to make
-  //output: array of coordinates
-  var results = [];
-
-  for (var i = 0; i < n; i++) {
-    results.push({
-      id: i,
-      x: Math.floor(Math.random() * (700 - 20)),
-      y: Math.floor(Math.random() * (450 - 20))
-    });
-  }
-
-  return results;
+var settings = {
+  w: window.innerWidth,
+  h: window.innerHeight,
+  r: 30,
+  n: 30,
+  duration: 1500
 };
 
-var margin = {top: -5, right: -5, bottom: -5, left: -5},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+var mouse = { x: settings.w/2, y: settings.h/2 };
+var score = 0, highScore =0, collisionCount =0;
 
-var gameOptions = {   //took out height and width properties
-  nEnemies: 30,
-  padding: 20,
-  asteroidSize: 20
+var pixelize = function (number) { return number + 'px'; };
+
+var rand = function (n) { return Math.floor(Math.random()*n); };
+var randX = function () { return pixelize (rand(settings.w-settings.r*2));};
+var randY = function () { return pixelize (rand(settings.h-settings.r*2));};
+
+var updateScore = function(){
+  d3.select('.scoreboard .current span').text(score);
+  d3.select('.scoreboard .highscore span').text(highScore);
+  d3.select('.scoreboard .collisions span').text(collisionCount);
 };
 
-var gameData = {
-  asteroidCount: 10,
-  highScore: 0,
-  currentScore: 0,
-  collisions: 0
-};
+var board = d3.select('.board').style({
+  width: pixelize( settings.w ),
+  height: pixelize( settings.h )
+});
 
-var drag = d3.behavior.drag()
-    .origin(function(d) { return d; })
-    .on("dragstart", dragstarted)
-    .on("drag", dragged)
-    .on("dragend", dragended);
+d3.select('.mouse').style({
+  top: pixelize(mouse.y),
+  left: pixelize(mouse.x),
+  width: pixelize(settings.r*2),
+  height: pixelize(settings.r*2),
+  'border-radius': pixelize(settings.r*2)
+});
 
-
-var highScore = d3.selectAll('.high');
-highScore.data(['high score goes here'])
-  .select('span')
-  .text(function (d) {
-    return d
-  });
-
-var currentScore = d3.selectAll('.current');
-currentScore.data(['current score goes here'])
-  .select('span')
-  .text(function (d) {
-    return d
-  });
-
-var collisions = d3.selectAll('.collisions');
-collisions.data(['collisions go here'])
-  .select('span')
-  .text(function (d) {
-    return d
-  });
-
-
-
-
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.right + ")");
-
-var container = svg.append("g");
-
-
-var newCoord = makeCoord(1);
-dot = container.append("g")
-    .attr("class", "player")
-  .selectAll("circle")
-    .data(newCoord)
-  .enter().append("circle")
+var asteroids = board.selectAll('.asteroids')
+  .data(d3.range(settings.n))
+  .enter().append('div')
+  .attr('class', 'asteroid')
   .style({
-    "fill": "yellow",
-    "stroke": "black"
+    top: randX,
+    left: randY,
+    width: pixelize(settings.r*2),
+    height: pixelize(settings.r*2)
+  });
+
+board.on('mousemove', function () {
+  var loc = d3.mouse(this);
+  mouse = { x: loc[0], y: loc[1] };
+  d3.select('.mouse').style({
+    top: pixelize(mouse.y-settings.r),
+    left: pixelize(mouse.x-settings.r)
   })
-    .attr("r", 5)
-    .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; })
-    .call(drag);
-
-var newCoord = makeCoord(gameData.asteroidCount);
-dot = container.append("g")
-  .selectAll("circle")
-    .data(newCoord)
-  .enter().append("circle")
-  .attr("class", "asteroid")
-  .attr("r", 5)
-    .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; });
-
-function dragstarted(d) {
-  d3.event.sourceEvent.stopPropagation();
-  d3.select(this).classed("dragging", true);
-}
-
-function dragged(d) {
-  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-}
-
-function dragended(d) {
-  d3.select(this).classed("dragging", false);
-}
-
-//move asteroids
-setInterval(function () {
-  //try to get mouse x, y
-  //var mouse = d3.mouse(d3.select('.gameBoard'));
-  //console.log(mouse);
-  newCoord = makeCoord(gameData.asteroidCount);
-  d3.selectAll('.asteroid')
-    .data(newCoord)
-    .transition().duration(2000)
-    .attr("cx", function(d) { return d.x; })
-    .attr("cy", function(d) { return d.y; });
-}, 1000);
+});
 
 
-//==========================================================================
-//old code
-
-// //game board
-// var svg = d3.select("body").append("svg")
-//   .attr("width", gameOptions.width + gameOptions.marginLeft + gameOptions.marginRight)
-//   .attr("height", gameOptions.height + gameOptions.marginTop + gameOptions.marginBottom)
-//   .append("g")
-//   .attr("transform", "translate(" + gameOptions.marginLeft + "," + gameOptions.marginRight + ")");
-
-// var gameBoard = d3.select('body').append('div')
-//   .attr('class', 'gameBoard')
-//   .style('height', String(gameOptions.height) + 'px')
-//   .style('width', String(gameOptions.width) + 'px')
-//   .style('background-color', 'black')
-//   .style('position', 'relative');
-
-
-// //asteroids
-// var newCoord = makeCoord(gameData.asteroidCount);
-// d3.select('.gameBoard').selectAll('div')
-//   .data(newCoord)
-//   .enter()
-//   .append('div')
-//   .attr('class', 'asteroid')
-//   .style('position', 'absolute')
-//   .style('left', function (d) {
-//     return String(d.x) + 'px'
-//   })
-//   .style('top', function (d) {
-//     return String(d.y) + 'px'
-//   })
-//   .style('background-color', 'red')
-//   .style('width', String(gameOptions.asteroidSize) + 'px')
-//   .style('height', String(gameOptions.asteroidSize) + 'px')
-//   .style('border-radius', String(gameOptions.asteroidSize) + 'px');
+var move = function (element) {
+  element.transition().duration(settings.duration).style({
+    top: randY,
+    left: randX
+  }).each('end', function () {
+    move(d3.select(this));
+  });
+};
+move(asteroids);
+//don't use setInterval with transition
+//each transition is event emitter, emits 'end'
+//for every transition, create listener for end event
+//then invoke move, but must specify object we want to move (to start a transition on)
+//1st invocation: starts a transiton on an object containing 30 elements
+//next invocaiton: transition invoked on each individual object
 
 
-// //drag behavior
-// var drag = d3.behavior.drag()
-//   .origin(function (d) {
-//     return d;
-//   })
-//   .on("dragstart", dragstarted)
-//   .on("drag", dragged)
-//   .on("dragend", dragended);
-// function dragstarted(d) {
-//   d3.event.sourceEvent.stopPropagation();
-//   d3.select(this).classed("dragging", true);
-// }
-// function dragged(d) {
-//   d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-// }
-// function dragended(d) {
-//   d3.select(this).classed("dragging", false);
-// }
+var scoreTicker = function(){
+  score = score + 1;
+  highScore = Math.max(score, highScore);
+  updateScore();
+};
+setInterval(scoreTicker, 100); //can use setInterval here, not worried about timing
 
-// //player
-// var playerCoord = makeCoord(1);
-// var player = d3.select('.gameBoard').selectAll('span')
-//   .data(playerCoord)
-//   .enter()
-//   .append('span')
-//   .attr('class', 'asteroid')
-//   .style('position', 'absolute')
-//   .style('left', function (d) {
-//     return String(d.x) + 'px'
-//   })
-//   .style('top', function (d) {
-//     return String(d.y) + 'px'
-//   })
-//   .style('background-color', 'blue')
-//   .style('width', String(gameOptions.asteroidSize) + 'px')
-//   .style('height', String(gameOptions.asteroidSize) + 'px')
-//   .style('border-radius', String(gameOptions.asteroidSize) + 'px')
-//   .call(drag);
+//need this b/c don't want to count collisions during all
+//ticks when a collision is occuring
+var prevCollision = false;
+var detectCollisions = function () {
+
+  var collision = false;
+
+  asteroids.each(function () {
+    var cx = this.offsetLeft + settings.r;    // what is offsetLeft and offsetRight
+    var cy = this.offsetTop + settings.r;
+    // the magic of mouse collision detection
+    var x = cx - mouse.x;
+    var y = cy - mouse.y;
+    if ( Math.sqrt (x*x + y*y) < settings.r ) {
+      collision = true;
+    }
+  });
+
+  if (collision) {
+    score = 0;
+    //make a sound!!
+    //make mouse element explode or flash
+    if (prevCollision !== collision) {
+      collisionCount = collisionCount + 1;
+    }
+  }
+  prevCollision = collision;
+};
+//no other code can run during setInterval, so again don't use
+d3.timer(detectCollisions);
+
+
+
+/*
+tweening is 'in-betweening'
+calculating all in between functions
+smoothing -- slower at begining and end
+shape is determined by 'easing' function
+default is 'cubic-in-out'; others include linear-in-out, elastic-in-out, bounce-in-out
+could drop these options in:
+  element.transition().duration(settings.duration).ease('elastic-in-out').style({...
+
+*/
 
 
 
 
 
-// // Define drag beavior
-// var drag = d3.behavior.drag()
-//   .on("drag", dragmove);
-
-// function dragmove(d) {
-//   var x = d3.event.x;
-//   var y = d3.event.y;
-//   d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
-// }
-
-
-//==========================================================================
-//super old code
-
-
-// function mousemove() {
-//   // Ignore the click event if it was suppressed
-//   if (d3.event.defaultPrevented) return;
-
-//   // Extract the click location\
-//   var point = d3.mouse(this);
-//   console.log(point[0], point[1]);
-// }
-
-
-// game
-
-// var body = d3.select("body");
-
-// var gameBoard = body.append("div")
-//   .attr("width", 800)
-//   .attr("height", 500)
-//   .attr("class", "board")
-//   .append("rect")
-//   .attr("width", 800)
-//   .attr("height", 500)
-//   .style({
-//     "fill": "green",
-//     "stroke-width": 3,
-//     "stroke": "black"
-//   });
-
-
-//MAKE A BUNCH OF ASTEROIDS
-//make a bunch of divs
-//assign an image and coordinates to each
-
-//MAKE A FUNCTION TO UPDATE POSITIONS
-//spits out new coordinates
-//do a transition
-
-//make an array of random coordinates
-
-// var makeCoord = function (n) {
-//   //input: number of random coordinates to make
-//   //output: array of coordinates
-//   var results = [];
-
-//   var max = 300;
-
-//   for (var i=0; i<n; i++) {
-//     results.push([Math.floor(Math.random()*max), Math.floor(Math.random()*max)])
-//   }
-
-//   return results;
-// }
